@@ -1,0 +1,11 @@
+{
+    "GCLOUD_PROJECT": "nodejs-steam-games",
+    "DATA_BACKEND": "datastore",
+    "CLOUD_BUCKET": "nodejs-steam-games",
+    "OAUTH2_CLIENT_ID": "425276063910-h0ab99f05ioe283lkgp8lm477qh568jg.apps.googleusercontent.com",
+    "OAUTH2_CLIENT_SECRET": "gVDd4BRZNOnma9w0Z_3QUwEB",
+    "OAUTH2_CALLBACK": "http://localhost:8080/auth/google/callback",
+    "MEMCACHE_URL": "memcached-11789.c14.us-east-1-3.ec2.cloud.redislabs.com:11789",
+    "MEMCACHE_USER" : "mc-xmDst",
+    "MEMCACHE_PASSWORD" : "123ServiceNow"
+}
