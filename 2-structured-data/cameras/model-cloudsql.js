@@ -44,7 +44,23 @@ function list (limit, token, cb) {
     }
   );
 }
-// [END list]
+
+// [START listby]
+function listBy (userId, limit, token, cb) {
+  token = token ? parseInt(token, 10) : 0;
+  connection.query(
+    'SELECT * FROM `books` WHERE `createdById` = ? LIMIT ? OFFSET ?',
+    [userId, limit, token],
+    (err, results) => {
+      if (err) {
+        cb(err);
+        return;
+      }
+      const hasMore = results.length === limit ? token + results.length : false;
+      cb(null, results, hasMore);
+    });
+}
+// [END listby]
 
 // [START create]
 function create (data, cb) {

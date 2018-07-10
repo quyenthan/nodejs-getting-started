@@ -15,6 +15,8 @@
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const images = require('../lib/images');
+const oauth2 = require('../lib/oauth2');
 
 function getModel () {
   return require(`./model-${require('../config').get('DATA_BACKEND')}`);
@@ -24,6 +26,7 @@ const router = express.Router();
 
 // Automatically parse request body as form data
 router.use(bodyParser.urlencoded({ extended: false }));
+router.use(oauth2.template);
 
 // Set Content-Type for all responses for these routes
 router.use((req, res, next) => {
@@ -49,6 +52,28 @@ router.get('/', (req, res, next) => {
   });
 });
 
+// [START mine]
+// Use the oauth2.required middleware to ensure that only logged-in users
+// can access this handler.
+router.get('/mine', oauth2.required, (req, res, next) => {
+  getModel().listBy(
+    req.user.id,
+    10,
+    req.query.pageToken,
+    (err, entities, cursor, apiResponse) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      res.render('cameras/list.pug', {
+        cameras: entities,
+        nextPageToken: cursor
+      });
+    }
+  );
+});
+// [END mine]
+
 /**
  * GET /cameras/add
  *
@@ -68,20 +93,39 @@ router.get('/add', (req, res) => {
  *
  * Create a camera.
  */
-// [START add_post]
-router.post('/add', (req, res, next) => {
-  const data = req.body;
+// [START add]
+router.post(
+  '/add',
+  images.multer.single('image'),
+  images.sendUploadToGCS,
+  (req, res, next) => {
+    const data = req.body;
 
-  // Save the data to the database.
-  getModel().create(data, (err, savedData) => {
-    if (err) {
-      next(err);
-      return;
+    // If the user is logged in, set them as the creator of the camera.
+    if (req.user) {
+      data.createdBy = req.user.displayName;
+      data.createdById = req.user.id;
+    } else {
+      data.createdBy = 'Anonymous';
     }
-    res.redirect(`${req.baseUrl}/${savedData.id}`);
-  });
-});
-// [END add_post]
+
+    // Was an image uploaded? If so, we'll use its public URL
+    // in cloud storage.
+    if (req.file && req.file.cloudStoragePublicUrl) {
+      data.imageUrl = req.file.cloudStoragePublicUrl;
+    }
+
+    // Save the data to the database.
+    getModel().create(data, (err, savedData) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      res.redirect(`${req.baseUrl}/${savedData.id}`);
+    });
+  }
+);
+// [END add]
 
 /**
  * GET /cameras/:id/edit
@@ -106,16 +150,30 @@ router.get('/:camera/edit', (req, res, next) => {
  *
  * Update a camera.
  */
-router.post('/:camera/edit', (req, res, next) => {
-  const data = req.body;
-  getModel().update(req.params.camera, data, (err, savedData) => {
-    if (err) {
-      next(err);
-      return;
+router.post(
+  '/:camera/edit',
+  images.multer.single('image'),
+  images.sendUploadToGCS,
+  (req, res, next) => {
+    let data = req.body;
+
+    // Was an image uploaded? If so, we'll use its public URL
+    // in cloud storage.
+    console.log(req.file);
+    console.log(req.file);
+    if (req.file && req.file.cloudStoragePublicUrl) {
+      req.body.imageUrl = req.file.cloudStoragePublicUrl;
     }
-    res.redirect(`${req.baseUrl}/${savedData.id}`);
-  });
-});
+
+    getModel().update(req.params.camera, data, (err, savedData) => {
+      if (err) {
+        next(err);
+        return;
+      }
+      res.redirect(`${req.baseUrl}/${savedData.id}`);
+    });
+  }
+);
 
 /**
  * GET /cameras/:id

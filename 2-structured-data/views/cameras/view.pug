@@ -26,9 +26,12 @@ block content
       span  Delete camera
 
   .media
+    .media-left
+      img(src=camera.imageUrl || "http://placekitten.com/g/128/192")
     .media-body
       h4= camera.name
         | &nbsp;
         small= camera.price
       h5 #{camera.brand||'unknown brand'}
       p= camera.highlights
+      small Added by #{camera.createdBy}

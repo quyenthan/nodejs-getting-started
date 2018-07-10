@@ -23,6 +23,8 @@ block content
   each camera in cameras
     .media
       a(href=`/cameras/${camera.id}`)
+        .media-left
+            img(src=camera.imageUrl || "http://placekitten.com/g/128/192")
         .media-body
           h4= camera.name
           p= camera.price

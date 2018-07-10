@@ -69,7 +69,7 @@ function fromDatastore (obj) {
 //   ]
 function toDatastore (obj, nonIndexed) {
   nonIndexed = nonIndexed || [];
-  const results = [];
+  let results = [];
   Object.keys(obj).forEach((k) => {
     if (obj[k] === undefined) {
       return;
@@ -103,7 +103,26 @@ function list (limit, token, cb) {
     cb(null, entities.map(fromDatastore), hasMore);
   });
 }
-// [END list]
+
+// Similar to ``list``, but only lists the cameras created by the specified
+// user.
+// [START listby]
+function listBy (userId, limit, token, cb) {
+  const q = ds.createQuery([kind])
+    .filter('createdById', '=', userId)
+    .limit(limit)
+    .start(token);
+
+  ds.runQuery(q, (err, entities, nextQuery) => {
+    if (err) {
+      cb(err);
+      return;
+    }
+    const hasMore = nextQuery.moreResults !== Datastore.NO_MORE_RESULTS ? nextQuery.endCursor : false;
+    cb(null, entities.map(fromDatastore), hasMore);
+  });
+}
+// [END listby]
 
 // Creates a new camera or updates an existing camera with new data. The provided
 // data is automatically translated into Datastore format. The camera will be
@@ -160,10 +179,13 @@ function _delete (id, cb) {
 
 // [START exports]
 module.exports = {
-  create,
-  read,
-  update,
+  create: (data, cb) => {
+    update(null, data, cb);
+  },
+  read: read,
+  update: update,
   delete: _delete,
-  list
+  list: list,
+  listBy: listBy
 };
 // [END exports]
