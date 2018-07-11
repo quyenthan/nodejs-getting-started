@@ -14,7 +14,7 @@
 'use strict';
 
 const express = require('express');
-const bodyParser = require('body-parser');
+//const bodyParser = require('body-parser');
 const images = require('../lib/images');
 const oauth2 = require('../lib/oauth2');
 
@@ -25,7 +25,7 @@ function getModel () {
 const router = express.Router();
 
 // Automatically parse request body as form data
-router.use(bodyParser.urlencoded({ extended: false }));
+//router.use(bodyParser.urlencoded({ extended: false }));
 router.use(oauth2.template);
 
 // Set Content-Type for all responses for these routes
@@ -99,7 +99,7 @@ router.post(
   images.multer.single('image'),
   images.sendUploadToGCS,
   (req, res, next) => {
-    const data = req.body;
+    let data = req.body;
 
     // If the user is logged in, set them as the creator of the camera.
     if (req.user) {
@@ -159,7 +159,6 @@ router.post(
 
     // Was an image uploaded? If so, we'll use its public URL
     // in cloud storage.
-    console.log(req.file);
     console.log(req.file);
     if (req.file && req.file.cloudStoragePublicUrl) {
       req.body.imageUrl = req.file.cloudStoragePublicUrl;

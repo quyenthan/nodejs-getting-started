@@ -111,6 +111,7 @@ function _delete (id, cb) {
 module.exports = {
   createSchema: createSchema,
   list: list,
+  listBy: listBy,
   create: create,
   read: read,
   update: update,
